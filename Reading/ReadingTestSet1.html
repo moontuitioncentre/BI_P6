@@ -2995,6 +2995,10 @@ function normalizeMalay(value) {
         .replace(/\bwhat's\b/g, "what is")
         .replace(/\bwho's\b/g, "who is")
         .replace(/\bthere's\b/g, "there is")
+      .replace(/\bi've\b/g, "i have")
+.replace(/\byou've\b/g, "you have")
+.replace(/\bwe've\b/g, "we have")
+.replace(/\bthey've\b/g, "they have")
 
         // 统一标点和空格
         .replace(/[.,!?;:"“”‘’()[\]{}']/g, " ")
