@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>听写练习（English）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center; padding: 20px; background: #fff; border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,.1); max-width: 720px; width: 92%;
+    }
+    .question { font-size: 28px; margin-bottom: 10px; }
+    .word { font-size: 34px; margin-bottom: 16px; }
+    .btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  margin-bottom: 14px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search-box input {
+  font-size: 18px;
+  padding: 8px 12px;
+  width: 180px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.btn.search-btn {
+  background-color: #008cff;
+}
+
+    .btn {
+      font-size: 18px; padding: 10px 20px; border: none; border-radius: 8px;
+      background-color: #dc3545; color: #fff; cursor: pointer;
+    }
+    .btn.secondary { background-color: #6c757d; }
+    .btn.info { background-color: #dc3545; }
+    .btn.success { background-color: #dc3545; }
+    .btn.warning { background-color: #ffc107; color: #000; }
+    .meaning {
+      margin-top: 10px; font-size: 20px; background: #f8f9fa; border-radius: 8px;
+      padding: 12px; min-height: 60px; line-height: 1.6; white-space: pre-wrap;
+    }
+
+  .test-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.test-btn {
+  font-size: 18px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.reading-btn {
+  background-color: #007bff;
+}
+
+.meaning-btn {
+  background-color: #28a745;
+}
+
+.test-btn:hover {
+  opacity: 0.85;
+}
+
+.set-selector {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.set-selector select {
+  font-size: 18px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
+
+/* 真正含义按钮 - 紫色 */
+.btn.purple {
+  background-color: #8e44ad;
+  color: white;
+}
+
+.btn.purple:hover {
+  background-color: #732d91;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="set-selector">
+  <label for="setSelect">选择词汇 Set：</label>
+  <select id="setSelect" onchange="changeSet()">
+  <option value="Set 1">Set 1</option>
+  <option value="Set 2">Set 2</option>
+  <option value="Set 3">Set 3</option>
+</select>
+</div>
+
+    <div class="search-box">
+  <input 
+  type="text" 
+  id="searchInput" 
+  placeholder=""
+  onkeydown="if(event.key === 'Enter') searchWord();"
+>
+
+  <button 
+    class="btn search-btn" 
+    onclick="searchWord()">
+    Search
+  </button>
+</div>
+    <div class="question" id="question">题目 1</div>
+    <div class="word" id="word">—</div>
+    
+    <div class="btns">
+      <!-- 华文优先 -->
+       <div class="btn-row">
+      <button class="btn" onclick="playEnglishWord()">🔊</button>
+      <button class="btn success" onclick="playMalayWord()">Bahasa Melayu</button>
+      <button class="btn info" onclick="showChinese()">华文</button>
+      </div>
+
+      <div class="btn-row">
+  <button class="btn purple" onclick="showTrueEnglish()">Meaning</button>      
+  <button class="btn purple" onclick="showTrueMalay()">Makna</button>  
+  <button class="btn purple" onclick="showTrueChinese()">含义</button>
+</div>
+
+      <div class="btn-row">
+      <button class="btn warning" onclick="showEnglishSentence()">Sentence</button>
+      <button class="btn warning" onclick="showMalaySentence()">Bina Ayat</button>      
+      <button class="btn warning" onclick="showChineseSentence()">造句</button>
+      
+      </div>
+
+      <div class="btn-row">
+      <button class="btn secondary" onclick="prevWord()">上一题</button>
+      <button class="btn secondary" onclick="nextWord()">下一题</button>
+      </div>
+
+</div>
+
+    <div class="meaning" id="meaning"></div>
+
+    <div class="test-buttons">
+  <button class="test-btn reading-btn" onclick="goToReadingTest()">
+    测试阅读
+  </button>
+
+  <button class="test-btn meaning-btn" onclick="goToMeaningTest()">
+    测试意思
+  </button>
+</div>
+
+  </div>
+
+  <script>
+    // ====== 词库 ======
+    const zh = [
+      "这",                // the
+  "一个",              // a
+  "到",                // to
+  "和",                // and
+  "在……里",           // in
+  "你",                // you
+  "的",                // of
+  "是",                // is
+  "我",                // i
+  "它",                // it
+  "为了",              // for
+  "是（过去式）",      // was
+  "和……一起",         // with
+  "我们",              // we
+  "他",                // he
+  "那个",              // that
+  "是",                // are
+  "在……上",           // on
+  "我的",              // my
+  "或者",              // or
+  "你的",              // your
+  "什么",              // what
+  "有",                // have
+  "在",                // at
+  "做",                // do
+  "关于",              // about
+  "使用",              // use
+  "他们",              // they
+  "是",                // be
+  "她",                // she
+  "可以",              // can
+  "当……时",           // when
+  "这个",              // this
+  "一个",              // an
+  "那里",              // there
+  "写",                // write
+  "怎样",              // how
+  "不",                // not
+  "从",                // from
+  "被使用",            // used
+  "人们",              // people
+  "做（过去式）",      // did
+  "读",                // read
+  "作为",              // as
+  "他的",              // his
+  "一",                // one
+  "但是",              // but
+  "它是",              // it's
+  "制作",              // make
+  "词语",              // words
+  "我",                // me
+  "是（过去式复数）",  // were
+  "时间",              // time
+  "将会",              // will
+  "她的",              // her
+  "由",                // by
+  "想",                // think
+  "每一个",            // each
+  "学校",              // school
+  "有（第三人称）",    // has
+  "答案",              // answer
+  "所以",              // so
+  "我是",              // i'm
+  "完成",              // complete
+  "去",                // go
+  "音乐",              // music
+  "正确",              // correct
+  "制作（过去式）",    // made
+  "去（进行中）",      // going
+  "喜欢",              // like
+  "部分",              // part
+  "说（过去式）",      // said
+  "如果",              // if
+  "因为",              // because
+  "非常",              // very
+  "问题",              // questions
+  "课",                // lesson
+  "然后",              // then
+  "工作",              // work
+  "某事",              // something
+  "故事",              // story
+  "外面",              // out
+  "为什么",            // why
+  "没有",              // no
+  "看",                // look
+  "课文",              // text
+  "所有",              // all
+  "谁",                // who
+  "更多",              // more
+  "不要",              // don't
+  "他们",              // them
+  "我们的",            // our
+  "一些",              // some
+  "哪一个",            // which
+  "有（过去式）",      // had
+  "单元",              // unit
+  "玩",                // play
+  "哪里",              // where
+  "新的",              // new
+  "句子"               // sentences
+    ];
+
+    const py = [
+  "zhè",               // the
+  "yī gè",             // a
+  "dào",               // to
+  "hé",                // and
+  "zài……lǐ",           // in
+  "nǐ",                // you
+  "de",                // of
+  "shì",               // is
+  "wǒ",                // i
+  "tā",                // it
+  "wèi le",            // for
+  "shì (guò qù shì)",  // was
+  "hé……yī qǐ",         // with
+  "wǒ men",            // we
+  "tā",                // he
+  "nà gè",             // that
+  "shì",               // are
+  "zài……shàng",        // on
+  "wǒ de",             // my
+  "huò zhě",           // or
+  "nǐ de",             // your
+  "shén me",           // what
+  "yǒu",               // have
+  "zài",               // at
+  "zuò",               // do
+  "guān yú",           // about
+  "shǐ yòng",          // use
+  "tā men",            // they
+  "shì",               // be
+  "tā",                // she
+  "kě yǐ",             // can
+  "dāng……shí",         // when
+  "zhè gè",            // this
+  "yī gè",             // an
+  "nà lǐ",             // there
+  "xiě",               // write
+  "zěn yàng",          // how
+  "bù",                // not
+  "cóng",              // from
+  "bèi shǐ yòng",      // used
+  "rén men",           // people
+  "zuò (guò qù shì)",  // did
+  "dú",                // read
+  "zuò wéi",           // as
+  "tā de",             // his
+  "yī",                // one
+  "dàn shì",           // but
+  "tā shì",            // it's
+  "zhì zuò",           // make
+  "cí yǔ",             // words
+  "wǒ",                // me
+  "shì (guò qù shì fù shù)", // were
+  "shí jiān",          // time
+  "jiāng huì",         // will
+  "tā de",             // her
+  "yóu",               // by
+  "xiǎng",             // think
+  "měi yī gè",         // each
+  "xué xiào",          // school
+  "yǒu (dì sān rén chēng)", // has
+  "dá àn",             // answer
+  "suǒ yǐ",            // so
+  "wǒ shì",            // i'm
+  "wán chéng",         // complete
+  "qù",                // go
+  "yīn yuè",           // music
+  "zhèng què",         // correct
+  "zhì zuò (guò qù shì)", // made
+  "qù (jìn xíng zhōng)", // going
+  "xǐ huān",           // like
+  "bù fèn",            // part
+  "shuō (guò qù shì)", // said
+  "rú guǒ",            // if
+  "yīn wèi",           // because
+  "fēi cháng",         // very
+  "wèn tí",            // questions
+  "kè",                // lesson
+  "rán hòu",           // then
+  "gōng zuò",          // work
+  "mǒu shì",           // something
+  "gù shi",            // story
+  "wài miàn",          // out
+  "wèi shén me",       // why
+  "méi yǒu",           // no
+  "kàn",               // look
+  "kè wén",            // text
+  "suǒ yǒu",           // all
+  "shuí",              // who
+  "gèng duō",          // more
+  "bù yào",            // don't
+  "tā men",            // them
+  "wǒ men de",         // our
+  "yī xiē",            // some
+  "nǎ yī gè",          // which
+  "yǒu (guò qù shì)",  // had
+  "dān yuán",          // unit
+  "wán",               // play
+  "nǎ lǐ",             // where
+  "xīn de",            // new
+  "jù zi"              // sentences
+];
+
+    const en = [
+      "the",
+  "a",
+  "to",
+  "and",
+  "in",
+  "you",
+  "of",
+  "is",
+  "i",
+  "it",
+  "for",
+  "was",
+  "with",
+  "we",
+  "he",
+  "that",
+  "are",
+  "on",
+  "my",
+  "or",
+  "your",
+  "what",
+  "have",
+  "at",
+  "do",
+  "about",
+  "use",
+  "they",
+  "be",
+  "she",
+  "can",
+  "when",
+  "this",
+  "an",
+  "there",
+  "write",
+  "how",
+  "not",
+  "from",
+  "used",
+  "people",
+  "did",
+  "read",
+  "as",
+  "his",
+  "one",
+  "but",
+  "it's",
+  "make",
+  "words",
+  "me",
+  "were",
+  "time",
+  "will",
+  "her",
+  "by",
+  "think",
+  "each",
+  "school",
+  "has",
+  "answer",
+  "so",
+  "i'm",
+  "complete",
+  "go",
+  "music",
+  "correct",
+  "made",
+  "going",
+  "like",
+  "part",
+  "said",
+  "if",
+  "because",
+  "very",
+  "questions",
+  "lesson",
+  "then",
+  "work",
+  "something",
+  "story",
+  "out",
+  "why",
+  "no",
+  "look",
+  "text",
+  "all",
+  "who",
+  "more",
+  "don't",
+  "them",
+  "our",
+  "some",
+  "which",
+  "had",
+  "unit",
+  "play",
+  "where",
+  "new",
+  "sentences"
+    ];
+
+    const ms = [
+"itu",               // the
+  "satu",              // a
+  "ke",                // to
+  "dan",               // and
+  "di dalam",          // in
+  "kamu",              // you
+  "daripada",          // of
+  "ialah",             // is
+  "saya",              // i
+  "ia",                // it
+  "untuk",             // for
+  "adalah (masa lalu)", // was
+  "dengan",            // with
+  "kami",              // we
+  "dia",               // he
+  "itu",               // that
+  "ialah",             // are
+  "di atas",           // on
+  "saya punya",        // my
+  "atau",              // or
+  "kamu punya",        // your
+  "apa",               // what
+  "ada",               // have
+  "di",                // at
+  "buat",              // do
+  "tentang",           // about
+  "guna",              // use
+  "mereka",            // they
+  "jadi",              // be
+  "dia",               // she
+  "boleh",             // can
+  "apabila",           // when
+  "ini",               // this
+  "satu",              // an
+  "di sana",           // there
+  "tulis",             // write
+  "bagaimana",         // how
+  "tidak",             // not
+  "dari",              // from
+  "digunakan",         // used
+  "orang",             // people
+  "buat (masa lalu)",  // did
+  "baca",              // read
+  "sebagai",           // as
+  "dia punya",         // his
+  "satu",              // one
+  "tetapi",            // but
+  "ia ialah",          // it's
+  "buat",              // make
+  "perkataan",         // words
+  "saya",              // me
+  "adalah (masa lalu jamak)", // were
+  "masa",              // time
+  "akan",              // will
+  "dia punya",         // her
+  "oleh",              // by
+  "fikir",             // think
+  "setiap",            // each
+  "sekolah",           // school
+  "ada (orang ketiga)", // has
+  "jawapan",           // answer
+  "jadi",              // so
+  "saya ialah",        // i'm
+  "selesai",           // complete
+  "pergi",             // go
+  "muzik",             // music
+  "betul",             // correct
+  "dibuat",            // made
+  "sedang pergi",      // going
+  "suka",              // like
+  "bahagian",          // part
+  "cakap (masa lalu)", // said
+  "jika",              // if
+  "kerana",            // because
+  "sangat",            // very
+  "soalan",            // questions
+  "pelajaran",         // lesson
+  "kemudian",          // then
+  "kerja",             // work
+  "sesuatu",           // something
+  "cerita",            // story
+  "luar",              // out
+  "kenapa",            // why
+  "tiada",             // no
+  "lihat",             // look
+  "teks",              // text
+  "semua",             // all
+  "siapa",             // who
+  "lebih",             // more
+  "jangan",            // don't
+  "mereka",            // them
+  "kami punya",        // our
+  "beberapa",          // some
+  "yang mana",         // which
+  "ada (masa lalu)",   // had
+  "unit",              // unit
+  "bermain",           // play
+  "di mana",           // where
+  "baharu",            // new
+  "ayat"               // sentences
+];
+
+    const zhSentences = [
+      "这本书很有趣。",                               // the
+  "我有一个苹果。",                               // a
+  "我想去学校。",                                 // to
+  "我和你。",                                     // and
+  "书在书包里。",                                 // in
+  "你是我的朋友。",                               // you
+  "这是我的书。",                                 // of
+  "他是我的老师。",                               // is
+  "我是学生。",                                   // i
+  "它是一只猫。",                                 // it
+  "这份礼物是给你的。",                           // for
+  "他昨天在学校。",                               // was
+  "我和朋友一起去学校。",                         // with
+  "我们是好朋友。",                               // we
+  "他是我的哥哥。",                               // he
+  "那是我的书。",                                 // that
+  "我们是学生。",                                 // are
+  "书在桌子上。",                                 // on
+  "我的名字是阿里。",                             // my
+  "你可以吃苹果或者橙。",                         // or
+  "你的书包很重。",                               // your
+  "你在做什么？",                                 // what
+  "我有两本书。",                                 // have
+  "我在学校。",                                   // at
+  "我在做功课。",                                 // do
+  "关于这件事，我不清楚。",                       // about
+  "我们用尺来画直线。",                           // use
+  "他们是我的朋友。",                             // they
+  "我要成为一名医生。",                           // be
+  "她是我的姐姐。",                               // she
+  "我可以帮你。",                                 // can
+  "当老师进来时，我们要站起来。",                 // when
+  "这是我的书。",                                 // this
+  "我有一个苹果。",                               // an
+  "桌子上有一本书。",                             // there
+  "请写你的名字。",                               // write
+  "你怎样去学校？",                               // how
+  "我不去学校。",                                 // not
+  "我从家里来。",                                 // from
+  "铅笔被用来写字。",                             // used
+  "公园里有很多人。",                             // people
+  "他昨天做了功课。",                             // did
+  "我喜欢读书。",                                 // read
+  "他作为一名医生。",                             // as
+  "他的名字是阿末。",                             // his
+  "我有一个苹果。",                               // one
+  "但是我不想去。",                               // but
+  "它是一个红色的球。",                           // it's
+  "妈妈在制作蛋糕。",                             // make
+  "请写十个词语。",                               // words
+  "请给我一杯水。",                               // me
+  "他们昨天在公园。",                             // were
+  "时间过得很快。",                               // time
+  "明天将会下雨。",                               // will
+  "她的书包是蓝色的。",                           // her
+  "这本书是我老师写的。",                         // by
+  "我认为你是对的。",                             // think
+  "每一个学生都要努力。",                         // each
+  "我的学校很大。",                               // school
+  "她有一个新书包。",                             // has
+  "请回答我的问题。",                             // answer
+  "所以，我们要努力。",                           // so
+  "我是学生。",                                   // i'm
+  "请完成你的功课。",                             // complete
+  "我想去学校。",                                 // go
+  "我喜欢听音乐。",                               // music
+  "你的答案是正确的。",                           // correct
+  "这个蛋糕是妈妈做的。",                         // made
+  "我正在去学校。",                               // going
+  "我喜欢吃苹果。",                               // like
+  "这是第一部分。",                               // part
+  "他说他很开心。",                               // said
+  "如果下雨，我们就不去。",                       // if
+  "因为下雨，我们不出门。",                       // because
+  "这朵花非常美丽。",                             // very
+  "请回答以下问题。",                             // questions
+  "今天我们学第三课。",                           // lesson
+  "然后，我们就回家了。",                         // then
+  "爸爸去工作了。",                               // work
+  "我想要一些东西。",                             // something
+  "妈妈给我讲了一个故事。",                       // story
+  "请出去。",                                     // out
+  "你为什么迟到？",                               // why
+  "冰箱里没有牛奶。",                             // no
+  "请看黑板。",                                   // look
+  "请读这篇课文。",                               // text
+  "所有人都在这里。",                             // all
+  "他是谁？",                                     // who
+  "我要更多。",                                   // more
+  "不要在课室里跑。",                             // don't
+  "他们是我的朋友。",                             // them
+  "我们的学校很大。",                             // our
+  "我买了一些苹果。",                             // some
+  "哪一个才是你的书？",                           // which
+  "他昨天有一本书。",                             // had
+  "今天我们学第一单元。",                         // unit
+  "我喜欢踢足球。",                               // play
+  "你在哪里？",                                   // where
+  "这是我的新书包。",                             // new
+  "请写五个句子。"                                // sentences
+    ];
+
+    const enSentences = [
+      "The book is very interesting.",                // the
+  "I have an apple.",                             // a
+  "I want to go to school.",                      // to
+  "You and I are friends.",                       // and
+  "The book is in the bag.",                      // in
+  "You are my friend.",                           // you
+  "This is my book.",                             // of
+  "He is my teacher.",                            // is
+  "I am a student.",                              // i
+  "It is a cat.",                                 // it
+  "This gift is for you.",                        // for
+  "He was at school yesterday.",                  // was
+  "I go to school with my friend.",               // with
+  "We are good friends.",                         // we
+  "He is my brother.",                            // he
+  "That is my book.",                             // that
+  "We are students.",                             // are
+  "The book is on the table.",                    // on
+  "My name is Ali.",                              // my
+  "You can eat an apple or an orange.",           // or
+  "Your bag is very heavy.",                      // your
+  "What are you doing?",                          // what
+  "I have two books.",                            // have
+  "I am at school.",                              // at
+  "I am doing my homework.",                      // do
+  "About this matter, I am not sure.",            // about
+  "We use a ruler to draw lines.",                // use
+  "They are my friends.",                         // they
+  "I want to be a doctor.",                       // be
+  "She is my sister.",                            // she
+  "I can help you.",                              // can
+  "When the teacher comes in, we must stand up.", // when
+  "This is my book.",                             // this
+  "I have an apple.",                             // an
+  "There is a book on the table.",                // there
+  "Please write your name.",                      // write
+  "How do you go to school?",                     // how
+  "I do not go to school.",                       // not
+  "I come from home.",                            // from
+  "The pencil is used for writing.",              // used
+  "There are many people in the park.",           // people
+  "He did his homework yesterday.",               // did
+  "I like to read books.",                        // read
+  "He works as a doctor.",                        // as
+  "His name is Ahmad.",                           // his
+  "I have an apple.",                             // one
+  "But I don't want to go.",                      // but
+  "It's a red ball.",                             // it's
+  "Mother is making a cake.",                     // make
+  "Please write ten words.",                      // words
+  "Please give me a glass of water.",             // me
+  "They were at the park yesterday.",             // were
+  "Time passes very quickly.",                    // time
+  "It will rain tomorrow.",                       // will
+  "Her bag is blue.",                             // her
+  "This book is written by my teacher.",          // by
+  "I think you are right.",                       // think
+  "Every student must work hard.",                // each
+  "My school is very big.",                       // school
+  "She has a new bag.",                           // has
+  "Please answer my question.",                   // answer
+  "So, we must work hard.",                       // so
+  "I am a student.",                              // i'm
+  "Please complete your homework.",               // complete
+  "I want to go to school.",                      // go
+  "I like to listen to music.",                   // music
+  "Your answer is correct.",                      // correct
+  "This cake is made by mother.",                 // made
+  "I am going to school.",                        // going
+  "I like to eat apples.",                        // like
+  "This is the first part.",                      // part
+  "He said he was very happy.",                   // said
+  "If it rains, we will not go.",                 // if
+  "Because it is raining, we do not go out.",     // because
+  "This flower is very beautiful.",               // very
+  "Please answer the following questions.",       // questions
+  "Today we learn Lesson Three.",                 // lesson
+  "Then, we went home.",                          // then
+  "Father went to work.",                         // work
+  "I want something.",                            // something
+  "Mother told me a story.",                      // story
+  "Please go out.",                               // out
+  "Why are you late?",                            // why
+  "There is no milk in the fridge.",              // no
+  "Look at the blackboard.",                      // look
+  "Please read this text.",                       // text
+  "Everyone is here.",                            // all
+  "Who is he?",                                   // who
+  "I want more.",                                 // more
+  "Don't run in the classroom.",                  // don't
+  "They are my friends.",                         // them
+  "Our school is very big.",                      // our
+  "I bought some apples.",                        // some
+  "Which is your book?",                          // which
+  "He had a book yesterday.",                     // had
+  "Today we learn the first unit.",               // unit
+  "I like to play football.",                     // play
+  "Where are you?",                               // where
+  "This is my new bag.",                          // new
+  "Please write five sentences."                  // sentences
+    ];
+
+    const msSentences = [
+      "Buku itu sangat menarik.",                     // the
+  "Saya ada sebiji epal.",                        // a
+  "Saya mahu pergi ke sekolah.",                  // to
+  "Saya dan Ali kawan.",                          // and
+  "Buku di dalam beg.",                           // in
+  "Kamu kawan saya.",                             // you
+  "Ini buku saya.",                               // of
+  "Dia ialah guru saya.",                         // is
+  "Saya seorang murid.",                          // i
+  "Ia ialah seekor kucing.",                      // it
+  "Hadiah ini untuk kamu.",                       // for
+  "Dia berada di sekolah semalam.",               // was
+  "Saya pergi ke sekolah dengan kawan.",          // with
+  "Kami kawan baik.",                             // we
+  "Dia abang saya.",                              // he
+  "Itu buku saya.",                               // that
+  "Kami murid.",                                  // are
+  "Buku di atas meja.",                           // on
+  "Nama saya Ali.",                               // my
+  "Kamu boleh makan epal atau oren.",             // or
+  "Beg kamu sangat berat.",                       // your
+  "Apa yang kamu buat?",                          // what
+  "Saya ada dua buah buku.",                      // have
+  "Saya di sekolah.",                             // at
+  "Saya sedang membuat kerja rumah.",             // do
+  "Tentang perkara ini, saya tidak pasti.",       // about
+  "Kami menggunakan pembaris untuk melukis garisan.", // use
+  "Mereka kawan saya.",                           // they
+  "Saya mahu menjadi seorang doktor.",            // be
+  "Dia kakak saya.",                              // she
+  "Saya boleh menolong anda.",                    // can
+  "Semasa cikgu masuk, kita mesti bangun.",       // when
+  "Ini buku saya.",                               // this
+  "Saya ada sebiji epal.",                        // an
+  "Terdapat sebuah buku di atas meja.",           // there
+  "Sila tulis nama kamu.",                        // write
+  "Bagaimana kamu pergi ke sekolah?",             // how
+  "Saya tidak pergi ke sekolah.",                 // not
+  "Saya datang dari rumah.",                      // from
+  "Pensel digunakan untuk menulis.",              // used
+  "Terdapat ramai orang di taman.",               // people
+  "Dia membuat kerja rumah semalam.",             // did
+  "Saya suka membaca.",                           // read
+  "Dia sebagai seorang doktor.",                  // as
+  "Namanya Ahmad.",                               // his
+  "Saya ada sebiji epal.",                        // one
+  "Tetapi saya tidak mahu pergi.",                // but
+  "Ia ialah sebiji bola merah.",                  // it's
+  "Ibu sedang membuat kek.",                      // make
+  "Sila tulis sepuluh perkataan.",                // words
+  "Sila beri saya segelas air.",                  // me
+  "Mereka berada di taman semalam.",              // were
+  "Masa berlalu dengan sangat cepat.",            // time
+  "Esok akan hujan.",                             // will
+  "Beg dia berwarna biru.",                       // her
+  "Buku ini ditulis oleh cikgu saya.",            // by
+  "Saya berpendapat kamu betul.",                 // think
+  "Setiap murid mesti berusaha.",                 // each
+  "Sekolah saya sangat besar.",                   // school
+  "Dia ada beg baharu.",                          // has
+  "Sila jawab soalan saya.",                      // answer
+  "Jadi, kita mesti berusaha.",                   // so
+  "Saya seorang murid.",                          // i'm
+  "Sila selesaikan kerja rumah kamu.",            // complete
+  "Saya mahu pergi ke sekolah.",                  // go
+  "Saya suka mendengar muzik.",                   // music
+  "Jawapan kamu betul.",                          // correct
+  "Kek ini dibuat oleh ibu.",                     // made
+  "Saya sedang pergi ke sekolah.",                // going
+  "Saya suka makan epal.",                        // like
+  "Ini bahagian pertama.",                        // part
+  "Dia berkata dia sangat gembira.",              // said
+  "Jika hujan, kami tidak pergi.",                // if
+  "Kerana hujan, kami tidak keluar.",             // because
+  "Bunga ini sangat cantik.",                     // very
+  "Sila jawab soalan berikut.",                   // questions
+  "Hari ini kita belajar pelajaran ketiga.",      // lesson
+  "Kemudian, kami pun balik.",                    // then
+  "Ayah pergi bekerja.",                          // work
+  "Saya mahu sesuatu.",                           // something
+  "Ibu menceritakan satu cerita kepada saya.",    // story
+  "Sila keluar.",                                 // out
+  "Kenapa kamu lambat?",                          // why
+  "Tiada susu di dalam peti sejuk.",              // no
+  "Lihat papan hitam.",                           // look
+  "Sila baca teks ini.",                          // text
+  "Semua orang ada di sini.",                     // all
+  "Siapa dia?",                                   // who
+  "Saya mahu lebih.",                             // more
+  "Jangan berlari di dalam bilik darjah.",        // don't
+  "Mereka kawan saya.",                           // them
+  "Sekolah kami sangat besar.",                   // our
+  "Saya membeli beberapa biji epal.",             // some
+  "Yang mana buku kamu?",                         // which
+  "Dia ada sebuah buku semalam.",                 // had
+  "Hari ini kami belajar unit pertama.",          // unit
+  "Saya suka bermain bola sepak.",                // play
+  "Di mana kamu?",                                // where
+  "Ini beg baharu saya.",                         // new
+  "Sila tulis lima ayat."                         // sentences
+    ];
+
+    // ===== Set 词库管理 =====
+const wordSets = {
+  "Set 1": {
+    zh: zh,
+    py: py,
+    en: en,
+    ms: ms,
+
+zhMeaning: [
+    "用来指特定的人或物。",                         // the
+  "一个（用于辅音开头的词前）。",                 // a
+  "到某个方向或动作的方向。",                     // to
+  "用来连接两个词或句子。",                       // and
+  "在某个空间的里面。",                           // in
+  "指代对方。",                                   // you
+  "属于……的。",                                   // of
+  "表示“是”或“存在”。",                          // is
+  "指代我自己。",                                 // i
+  "指代前面提到的事物。",                         // it
+  "为了或给。",                                   // for
+  "是（过去式）。",                               // was
+  "和某人一起或带有。",                           // with
+  "指代我们大家。",                               // we
+  "指代男性。",                                   // he
+  "那个。",                                       // that
+  "表示“是”或“存在”（复数）。",                  // are
+  "在某个物体的表面。",                           // on
+  "属于我的。",                                   // my
+  "或者，表示选择。",                             // or
+  "属于你的。",                                   // your
+  "问事物的词。",                                 // what
+  "拥有或具有。",                                 // have
+  "在某个地点或时间点。",                         // at
+  "做某事。",                                     // do
+  "关于或有关。",                                 // about
+  "使用。",                                       // use
+  "指代他们。",                                   // they
+  "是或存在。",                                   // be
+  "指代女性。",                                   // she
+  "可以或有能力。",                               // can
+  "当……的时候。",                                // when
+  "指代近处的人或物。",                           // this
+  "一个（用于元音开头的词前）。",                 // an
+  "在那个地方。",                                 // there
+  "用笔写字。",                                   // write
+  "怎样或如何。",                                 // how
+  "不或不是。",                                   // not
+  "从或来自。",                                   // from
+  "被用来做某事。",                               // used
+  "人们或所有人。",                               // people
+  "做（过去式）。",                               // did
+  "看书或阅读文字。",                             // read
+  "作为或如同。",                                 // as
+  "属于他的。",                                   // his
+  "数字一。",                                     // one
+  "但是或不过。",                                 // but
+  "它是（it is 的缩写）。",                       // it's
+  "制作或做。",                                   // make
+  "词语（复数）。",                               // words
+  "指代我自己（宾格）。",                         // me
+  "是（过去式复数）。",                           // were
+  "时间。",                                       // time
+  "将会。",                                       // will
+  "属于她的。",                                   // her
+  "由谁做的或通过。",                             // by
+  "想或思考。",                                   // think
+  "每一个。",                                     // each
+  "学校。",                                       // school
+  "有或拥有（第三人称单数）。",                   // has
+  "答案或回复。",                                 // answer
+  "所以。",                                       // so
+  "我是（I am 的缩写）。",                        // i'm
+  "完成或做完。",                                 // complete
+  "去某个地方。",                                 // go
+  "音乐。",                                       // music
+  "对的，没有错误。",                             // correct
+  "制作（过去式）。",                             // made
+  "正在去某个地方。",                             // going
+  "喜欢或觉得开心。",                             // like
+  "部分或零件。",                                 // part
+  "说（过去式）。",                               // said
+  "如果或假如。",                                 // if
+  "因为。",                                       // because
+  "非常或很。",                                   // very
+  "问题（复数）。",                               // questions
+  "课或课程。",                                   // lesson
+  "然后或接着。",                                 // then
+  "工作或任务。",                                 // work
+  "某事或某物。",                                 // something
+  "故事或事情。",                                 // story
+  "外面或出去。",                                 // out
+  "为什么。",                                     // why
+  "没有或不是。",                                 // no
+  "用眼睛看。",                                   // look
+  "课文或文本。",                                 // text
+  "所有或全部。",                                 // all
+  "谁。",                                         // who
+  "更多或更加。",                                 // more
+  "不要（do not 的缩写）。",                      // don't
+  "指代他们（宾格）。",                           // them
+  "属于我们的。",                                 // our
+  "一些。",                                       // some
+  "哪一个。",                                     // which
+  "有（过去式）。",                               // had
+  "单元或单位。",                                 // unit
+  "玩或玩耍。",                                   // play
+  "在哪里。",                                     // where
+  "新的。",                                       // new
+  "句子（复数）。"                                // sentences
+  ],
+
+  msMeaning: [
+    "Kata untuk tunjuk benda.",                   // the
+  "Satu benda atau orang.",                     // a
+  "Ke arah atau menuju.",                       // to
+  "Kata untuk sambung dua perkara.",            // and
+  "Di dalam.",                                  // in
+  "Kata ganti nama diri orang kedua.",          // you
+  "Daripada atau kepunyaan.",                   // of
+  "Kata untuk menerangkan.",                    // is
+  "Kata ganti nama diri orang pertama.",        // i
+  "Kata ganti nama untuk benda.",               // it
+  "Untuk atau bagi.",                           // for
+  "Kata untuk masa lalu.",                      // was
+  "Bersama dengan.",                            // with
+  "Kami atau kita.",                            // we
+  "Kata ganti nama untuk lelaki.",              // he
+  "Kata untuk tunjuk benda jauh.",              // that
+  "Kata untuk menerangkan.",                    // are
+  "Di atas.",                                   // on
+  "Kepunyaan saya.",                            // my
+  "Pilihan untuk dua benda.",                   // or
+  "Kepunyaan kamu.",                            // your
+  "Soalan untuk tanya benda.",                  // what
+  "Ada atau memiliki.",                         // have
+  "Di sesuatu tempat.",                         // at
+  "Buat sesuatu.",                              // do
+  "Berkaitan dengan sesuatu.",                  // about
+  "Guna alat untuk buat kerja.",                // use
+  "Orang lain.",                                // they
+  "Jadi atau adalah.",                          // be
+  "Kata ganti nama untuk perempuan.",           // she
+  "Boleh atau mampu.",                          // can
+  "Bila atau masa.",                            // when
+  "Kata untuk tunjuk benda dekat.",             // this
+  "Satu (untuk benda).",                        // an
+  "Di sana atau di situ.",                      // there
+  "Buat huruf atau perkataan.",                 // write
+  "Bagaimana atau macam mana.",                 // how
+  "Bukan atau tidak.",                          // not
+  "Kata untuk tunjuk asal usul.",               // from
+  "Guna untuk sesuatu perkara.",                // used
+  "Manusia atau orang ramai.",                  // people
+  "Buat (masa lalu).",                          // did
+  "Baca buku atau tulisan.",                    // read
+  "Sebagai atau macam.",                        // as
+  "Kepunyaan dia (lelaki).",                    // his
+  "Nombor satu.",                               // one
+  "Tetapi atau namun.",                         // but
+  "Ia ialah atau ia adalah.",                   // it's
+  "Buat sesuatu dengan tangan.",                // make
+  "Perkataan dalam bahasa.",                    // words
+  "Kata ganti nama diri orang pertama.",        // me
+  "Kata untuk masa lalu (jamak).",              // were
+  "Masa yang berlalu.",                         // time
+  "Akan atau akan datang.",                     // will
+  "Kepunyaan dia (perempuan).",                 // her
+  "Dibuat oleh.",                               // by
+  "Fikir atau rasa.",                           // think
+  "Setiap satu.",                               // each
+  "Tempat untuk belajar.",                      // school
+  "Ada atau memiliki (untuk dia).",             // has
+  "Jawapan kepada soalan.",                     // answer
+  "Jadi atau oleh itu.",                        // so
+  "Saya adalah.",                               // i'm
+  "Selesai atau sudah dibuat.",                 // complete
+  "Bergerak ke tempat lain.",                   // go
+  "Bunyi atau lagu.",                           // music
+  "Betul atau tepat.",                          // correct
+  "Dibuat atau dihasilkan.",                    // made
+  "Sedang menuju ke sesuatu tempat.",           // going
+  "Rasa seronok.",                              // like
+  "Satu bahagian daripada sesuatu.",            // part
+  "Cakap atau sebut (masa lalu).",              // said
+  "Kalau atau andai kata.",                     // if
+  "Sebab sesuatu berlaku.",                     // because
+  "Sangat atau amat.",                          // very
+  "Soalan untuk ditanya.",                      // questions
+  "Pelajaran atau topik.",                      // lesson
+  "Kemudian atau selepas itu.",                 // then
+  "Kerja atau tugas.",                          // work
+  "Sesuatu atau perkara.",                      // something
+  "Cerita atau kisah.",                         // story
+  "Di luar.",                                   // out
+  "Kenapa atau apa sebab.",                     // why
+  "Tiada atau tidak ada.",                      // no
+  "Lihat atau tengok.",                         // look
+  "Tulisan atau bacaan dalam buku.",            // text
+  "Semua sekali.",                              // all
+  "Siapa atau orang mana.",                     // who
+  "Lagi atau tambah.",                          // more
+  "Jangan atau usah.",                          // don't
+  "Orang lain.",                                // them
+  "Kepunyaan kami.",                            // our
+  "Beberapa atau sebahagian.",                  // some
+  "Yang mana satu.",                            // which
+  "Ada atau memiliki (masa lalu).",             // had
+  "Satu bahagian dalam buku.",                  // unit
+  "Bermain atau buat aktiviti.",                // play
+  "Di mana atau tempat apa.",                   // where
+  "Baharu atau belum pernah guna.",             // new
+  "Susunan perkataan yang lengkap."             // sentences
+  ],
+
+  enMeaning: [
+    "Used to point to a specific person or thing.", // the
+  "One (used before a consonant sound).",         // a
+  "In the direction of.",                         // to
+  "Used to join two words or sentences.",         // and
+  "Inside a space.",                              // in
+  "Points to the person spoken to.",              // you
+  "Belonging to or relating to.",                 // of
+  "Shows that something exists or is true.",      // is
+  "Points to myself.",                            // i
+  "Points to something already mentioned.",       // it
+  "For the purpose of or given to.",              // for
+  "Shows past existence.",                        // was
+  "Together with or having.",                     // with
+  "Points to us.",                                // we
+  "Points to a male person.",                     // he
+  "Points to something far.",                     // that
+  "Shows that something exists (plural).",        // are
+  "On the surface of something.",                 // on
+  "Belonging to me.",                             // my
+  "A choice between two things.",                 // or
+  "Belonging to you.",                            // your
+  "A word to ask about things.",                  // what
+  "To own or possess.",                           // have
+  "At a place or time.",                          // at
+  "To do something.",                             // do
+  "Relating to something.",                       // about
+  "To do something with a tool.",                 // use
+  "Points to other people.",                      // they
+  "To exist.",                                    // be
+  "Points to a female person.",                   // she
+  "Can or able to.",                              // can
+  "At the time that.",                            // when
+  "Points to something near.",                    // this
+  "One (used before a vowel sound).",             // an
+  "In that place.",                               // there
+  "To write words with a pen.",                   // write
+  "In what way.",                                 // how
+  "Used to say no.",                              // not
+  "Shows where something comes from.",            // from
+  "Used for something.",                          // used
+  "More than one person.",                        // people
+  "Did something (past tense).",                  // did
+  "To look at and understand words.",             // read
+  "In the role of.",                              // as
+  "Belonging to him.",                            // his
+  "The number one.",                              // one
+  "Used to show a difference.",                   // but
+  "It is (short form).",                          // it's
+  "To create or build.",                          // make
+  "Units of language (plural).",                  // words
+  "Points to myself (object).",                   // me
+  "Shows past existence (plural).",               // were
+  "The thing that passes.",                       // time
+  "Used to talk about the future.",               // will
+  "Belonging to her.",                            // her
+  "Done by or through.",                          // by
+  "To use your mind.",                            // think
+  "Every one.",                                   // each
+  "A place to learn.",                            // school
+  "To own something (for he/she/it).",            // has
+  "A reply to a question.",                       // answer
+  "For that reason.",                             // so
+  "I am (short form).",                           // i'm
+  "To finish something.",                         // complete
+  "To move to a place.",                          // go
+  "Sounds made by instruments.",                  // music
+  "Right, no mistake.",                           // correct
+  "Created or built (past tense).",               // made
+  "Moving to a place.",                           // going
+  "To enjoy or feel happy about.",                // like
+  "A piece of something bigger.",                 // part
+  "Spoke words (past tense).",                    // said
+  "Used to show a possibility.",                  // if
+  "For the reason that.",                         // because
+  "Very or extremely.",                           // very
+  "Things you ask (plural).",                     // questions
+  "A class or period of learning.",               // lesson
+  "At that time or next.",                        // then
+  "A job or task.",                               // work
+  "A thing or matter.",                           // something
+  "A tale or account of events.",                 // story
+  "Not inside.",                                  // out
+  "For what reason.",                             // why
+  "Not any or none.",                             // no
+  "To see with your eyes.",                       // look
+  "A written passage.",                           // text
+  "The whole number or amount.",                  // all
+  "What person.",                                 // who
+  "A larger amount.",                             // more
+  "Do not (short form).",                         // don't
+  "Points to other people (object).",             // them
+  "Belonging to us.",                             // our
+  "A small amount.",                              // some
+  "The one or ones that.",                        // which
+  "Owned or possessed (past tense).",             // had
+  "One part of a book.",                          // unit
+  "To have fun.",                                 // play
+  "In what place.",                               // where
+  "Not old, recently made.",                      // new
+  "Groups of words (plural)."                     // sentences
+  ],
+
+    zhSentences: zhSentences,
+    enSentences: enSentences,
+    msSentences: msSentences
+  },
+
+  "Set 2": {
+    zh: ["同学", "朋友", "辛辣"],
+    py: ["tóng xué", "péng you", "xīn là"],
+    en: ["classmate", "friend", "spicy"],
+    ms: ["rakan sekelas", "kawan", "pedas"],
+    zhSentences: [
+      "我的同学很友善。",
+      "他是我的好朋友。",
+      "我不喜欢吃辛辣的食物。"
+    ],
+    enSentences: [
+      "My classmate is friendly.",
+      "He is my good friend.",
+      "I do not like spicy food."
+    ],
+    msSentences: [
+      "Rakan sekelas saya sangat baik.",
+      "Dia ialah kawan baik saya.",
+      "Saya tidak suka makan makanan yang pedas."
+    ]
+  },
+
+  "Set 3": {
+    zh: ["篮球", "老师", "学校"],
+    py: ["lán qiú", "lǎo shī", "xué xiào"],
+    en: ["basketball", "teacher", "school"],
+    ms: ["bola keranjang", "guru", "sekolah"],
+    zhSentences: [
+      "我喜欢打篮球。",
+      "我的老师很亲切。",
+      "我每天去学校上课。"
+    ],
+    enSentences: [
+      "I like playing basketball.",
+      "My teacher is very kind.",
+      "I go to school every day."
+    ],
+    msSentences: [
+      "Saya suka bermain bola keranjang.",
+      "Guru saya sangat baik hati.",
+      "Saya pergi ke sekolah setiap hari."
+    ]
+  }
+};
+
+let activeSet = wordSets["Set 1"];
+
+    // ===== DOM & 语音 =====
+    let currentIndex = 0;
+    const questionDiv = document.getElementById('question');
+    const wordDiv = document.getElementById('word');
+    const meaningDiv = document.getElementById('meaning');
+
+    function setMeaning(text) { meaningDiv.textContent = text || ''; }
+
+    // 统一的朗读函数（默认：慢速 0.4、音高 0.6）
+    function speak(text, lang, preferNames = [], rate = 1.0, pitch = 0.6) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = rate;
+      u.pitch = pitch;
+
+      const trySpeak = () => {
+        const voices = speechSynthesis.getVoices() || [];
+        let candidates = voices.filter(v => (v.lang || '').toLowerCase().startsWith(lang.toLowerCase()));
+        // 如果没有马来语，回退印尼语
+        if (!candidates.length && lang.toLowerCase().startsWith('ms')) {
+          candidates = voices.filter(v => (v.lang || '').toLowerCase().startsWith('id'));
+          if (candidates.length) u.lang = 'id-ID';
+        }
+        for (const key of preferNames) {
+          const found = candidates.find(v => (v.name || '').toLowerCase().includes(key.toLowerCase()));
+          if (found) { u.voice = found; break; }
+        }
+        if (!u.voice && candidates.length) u.voice = candidates[0];
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      };
+
+      if (speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.onvoiceschanged = trySpeak;
+      }
+      trySpeak();
+    }
+
+    // ===== 华文为主（按钮函数不再覆盖速率/音高）=====
+    function playChineseWord() {
+  const text = activeSet.zh[currentIndex] || '';
+  const pinyin = activeSet.py[currentIndex] || '';
+
+  setMeaning(pinyin);
+
+  speak(text, 'zh-CN', ['Xiaoyi','Microsoft']);
+}
+
+    function showEnglish() {
+      const text = activeSet.en[currentIndex] || '(待添加英文)';
+      setMeaning(text);
+      speak(text, 'en-US', ['Google','Microsoft','Natural']);
+    }
+
+    function playMalayWord(){
+
+const text = activeSet.ms[currentIndex] || '';
+
+setMeaning(text);
+
+speak(
+text,
+'ms-MY',
+['Microsoft','Malay','Bahasa']
+);
+
+}
+
+    function showChineseSentence() {
+      const text = activeSet.zhSentences[currentIndex] || '(待添加华文造句)';
+      setMeaning(text);
+      speak(text, 'zh-CN', ['Xiaoyi','Microsoft']);
+    }
+
+    function showEnglishSentence() {
+      const text = activeSet.enSentences[currentIndex] || '(待添加英文句子)';
+      setMeaning(text);
+      speak(text, 'en-US', ['Google','Microsoft','Natural']);
+    }
+
+    function showMalaySentence() {
+      const text = activeSet.msSentences[currentIndex] || '(待添加马来文句子)';
+      setMeaning(text);
+      speak(text, 'ms-MY', ['Rizwan','Microsoft','Malay','Bahasa']);
+    }
+
+    function nextWord() {
+
+if(currentIndex < activeSet.en.length - 1){
+
+currentIndex++;
+
+updateQuestion();
+
+}
+
+}
+
+    function prevWord(){
+
+if(currentIndex > 0){
+
+currentIndex--;
+
+updateQuestion();
+
+}
+
+}
+
+    function updateQuestion() {
+  questionDiv.innerText = `题目 ${currentIndex + 1}`;
+  wordDiv.innerText = activeSet.en[currentIndex] || '—';
+  setMeaning('');
+}
+
+
+// ===== 搜索功能 =====
+function searchWord() {
+
+  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+  if (!keyword) {
+    alert("请输入要搜索的词语");
+    return;
+  }
+
+
+  const index = activeSet.en.findIndex(word => 
+word.toLowerCase() === keyword
+);
+
+
+  if (index !== -1) {
+
+    currentIndex = index;
+    updateQuestion();
+
+  } else {
+
+    alert("没有找到：" + keyword);
+
+  }
+
+}
+
+// ===== 真正含义 =====
+
+function showTrueChinese() {
+  const text = activeSet.zhMeaning[currentIndex] || '暂时没有华文解释';
+  setMeaning(text);
+  speak(text, 'zh-CN', ['Xiaoyi', 'Microsoft']);
+}
+
+function showTrueMalay() {
+  const text = activeSet.msMeaning[currentIndex] || 'Tiada penerangan Bahasa Melayu';
+  setMeaning(text);
+  speak(text, 'ms-MY', ['Microsoft', 'Malay', 'Bahasa']);
+}
+
+function showTrueEnglish() {
+  const text = activeSet.enMeaning[currentIndex] || 'No English explanation available';
+  setMeaning(text);
+  speak(text, 'en-US', ['Google', 'Microsoft', 'Natural']);
+}
+
+function showChinese(){
+
+const text = activeSet.zh[currentIndex] || '';
+
+setMeaning(text);
+
+speak(
+text,
+'zh-CN',
+['Xiaoyi','Microsoft']
+);
+
+}
+
+function playEnglishWord(){
+
+const text = activeSet.en[currentIndex] || '';
+
+setMeaning('');
+
+speak(
+text,
+'en-US',
+['Google','Microsoft','Natural']
+);
+
+}
+
+function goToReadingTest() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  window.location.href = `Reading/ReadingTest${selectedSet.replace("Set ", "Set")}.html`;
+}
+
+function goToMeaningTest() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  window.location.href = `Meaning/MeaningTest${selectedSet.replace("Set ", "Set")}.html`;
+}
+
+function changeSet() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  if (!wordSets[selectedSet]) return;
+
+  activeSet = wordSets[selectedSet];
+
+  currentIndex = 0;
+  updateQuestion();
+}
+
+updateQuestion();
+  </script>
+</body>
+</html>
