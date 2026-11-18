@@ -2978,14 +2978,30 @@ function checkAnswer(text) {
         return;
     }
 
-    // 标准化马来文：统一大小写、标点和空格
-    function normalizeMalay(value) {
-        return String(value || "")
-            .toLowerCase()
-            .replace(/[.,!?;:"“”‘’()[\]{}]/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-    }
+
+function normalizeMalay(value) {
+    return String(value || "")
+        .toLowerCase()
+
+        // 自动展开英文缩写
+        .replace(/\bi'm\b/g, "i am")
+        .replace(/\byou're\b/g, "you are")
+        .replace(/\bwe're\b/g, "we are")
+        .replace(/\bthey're\b/g, "they are")
+        .replace(/\bhe's\b/g, "he is")
+        .replace(/\bshe's\b/g, "she is")
+        .replace(/\bit's\b/g, "it is")
+        .replace(/\bthat's\b/g, "that is")
+        .replace(/\bwhat's\b/g, "what is")
+        .replace(/\bwho's\b/g, "who is")
+        .replace(/\bthere's\b/g, "there is")
+
+        // 统一标点和空格
+        .replace(/[.,!?;:"“”‘’()[\]{}']/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 
     const answer = normalizeMalay(words[current]);
     const cleanText = normalizeMalay(text);
